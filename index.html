@@ -2,80 +2,93 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OpenWeb + AdYouLike :) | Prebid Diagnostic</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oink GAM + Prebid competition test</title>
 <style>
-:root{font-family:system-ui,-apple-system,sans-serif;color:#1c2734}body{max-width:980px;margin:32px auto;padding:0 18px;line-height:1.5}h1{font-size:clamp(24px,4vw,36px)}.box{padding:18px;border:1px solid #d3dce5;border-radius:12px;margin:16px 0}.meta{color:#607081}button{border:0;background:#174ea6;color:white;padding:12px 18px;border-radius:8px;font-weight:700;cursor:pointer}button:disabled{opacity:.5;cursor:wait}.ok{color:#16763b}.err{color:#bc2d20}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #dce2e9}th{background:#f6f8fa}pre{font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;background:#f6f8fa;padding:12px;border-radius:8px;max-height:400px;overflow:auto}code{overflow-wrap:anywhere}#slot{width:300px;height:250px;max-width:100%;background:#f8fafc;border:2px dashed #b8c4d1;display:flex;align-items:center;justify-content:center;text-align:center}
+body{font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;max-width:950px;padding:0 18px;margin:32px auto;color:#18232f;background:#fff}
+.card{border:1px solid #d4dde7;border-radius:12px;padding:20px;margin:18px 0}h1{line-height:1.17}h2{margin-top:0}button{border:0;border-radius:8px;background:#1356ba;color:#fff;padding:12px 18px;font:600 16px system-ui;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
+#div-gpt-ad-1793043226235-0{width:300px;min-height:250px;border:1px dashed #9cabbd;background:#f7f9fc;margin:18px 0}
+table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #e0e5eb;text-align:left;padding:10px;overflow-wrap:anywhere}th{background:#f4f6f8}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#15202b;color:#e5f4ff;padding:15px;border-radius:9px;max-height:480px;overflow:auto}.muted{color:#5b6876}.ok{color:#137333}.warn{color:#b3261e}code{overflow-wrap:anywhere}
 </style>
 <script>
-window.pbjs=window.pbjs||{};window.pbjs.que=window.pbjs.que||[];
+window.googletag=window.googletag||{cmd:[]};
+window.pbjs=window.pbjs||{que:[]};
 </script>
-<script async src="./prebid.js?v=3" onerror="window.PREBID_LOAD_FAILED=true"></script>
+<script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js" crossorigin="anonymous"></script>
+<script async src="./prebid.js"></script>
 </head>
 <body>
-<h1>Prebid.js: OpenWeb + AdYouLike</h1>
-<p class="meta">Live SSP diagnostic test. No Google Ad Manager and no paid ad rendering.</p>
-<section class="box"><h2>Configuration</h2>
-<p><strong>OpenWeb:</strong> org <code>259</code>, placementId <code>netpeak.net_hb_display</code></p>
-<p><strong>AdYouLike:</strong> placement <code>d4dc545444ae302ef984244484d8ba9b</code></p>
-<p><strong>Banner:</strong> 300×250 · <strong>Timeout:</strong> 2500 ms</p>
-<p id="state">Loading Prebid.js…</p>
-<button id="run" disabled>Run auction with both SSPs</button>
+<h1>Oink.bg — Header Bidding vs GAM</h1>
+<p class="muted">Single-slot test. Prebid calls OpenWeb and AdYouLike, passes bid targeting to the existing GAM Price Priority setup, then GAM selects a line item or other eligible demand, including AdX. No new GAM line items are created.</p>
+<section class="card">
+<h2>Test configuration</h2>
+<p><strong>GAM:</strong> <code>/23114056084/np_oink/desktop-blog-right1</code><br>
+<strong>GPT page_url:</strong> <code>https://oink.bg/</code><br>
+<strong>Bidder adapters:</strong> <code>openweb</code>, <code>adyoulike</code><br>
+<strong>Size:</strong> 300×250 · <strong>Bid timeout:</strong> 2500 ms · <strong>Price granularity:</strong> $0.05</p>
+<p id="status">Initializing libraries…</p>
+<button id="run" disabled>Run Prebid → GAM auction</button>
+<p class="muted" style="font-size:13px">Only one GAM request per page load. Reload the page for another test. This is a real ad request, not a simulated bid.</p>
+<div id="div-gpt-ad-1793043226235-0"></div>
 </section>
-<section class="box"><h2>Auction results</h2><p id="summary">Not started</p>
-<table><thead><tr><th>Bidder</th><th>Result</th><th>CPM</th><th>Currency</th><th>Response (ms)</th></tr></thead><tbody id="out"><tr><td colspan="5">No auction yet</td></tr></tbody></table>
+<section class="card">
+<h2>Auction result</h2>
+<p id="result">Not started.</p>
+<table><thead><tr><th>Bidder</th><th>Result</th><th>CPM</th><th>Response time</th></tr></thead><tbody id="bidrows"><tr><td colspan="4">Not started.</td></tr></tbody></table>
+<h3>GPT slot targeting</h3>
+<pre id="targeting">Not set yet.</pre>
+<h3>GAM render</h3>
+<pre id="render">Not requested yet.</pre>
 </section>
-<section class="box"><h2>Visual ad slot (not rendered)</h2><div id="slot">300 × 250<br>Diagnostic only</div></section>
-<section class="box"><h2>Diagnostic log</h2><pre id="log"></pre></section>
+<section class="card"><h2>Diagnostic log</h2><pre id="log">Page initialized.</pre></section>
 <script>
 (function(){
 'use strict';
-const S={state:document.getElementById('state'),run:document.getElementById('run'),summary:document.getElementById('summary'),out:document.getElementById('out'),log:document.getElementById('log')};
-const bidders=['openweb','adyoulike'];
-const lines=[];
-function log(msg,detail){let x=new Date().toISOString()+' '+msg;if(detail!==undefined){try{x+='\n'+JSON.stringify(detail,null,2)}catch(e){x+=' [unserializable]'}}lines.push(x);S.log.textContent=lines.join('\n\n')}
-function status(message,success){S.state.className=success===true?'ok':success===false?'err':'';S.state.textContent=message}
-function row(fields){const r=document.createElement('tr');fields.forEach(v=>{let td=document.createElement('td');td.textContent=v==null?'—':String(v);r.appendChild(td)});S.out.appendChild(r)}
-function ready(){return window.pbjs&&window.pbjs.libLoaded===true&&typeof window.pbjs.requestBids==='function'&&typeof window.pbjs.addAdUnits==='function'}
-let polling=0;const timer=setInterval(()=>{polling++;
- if(ready()){clearInterval(timer);status('Prebid.js ready — '+window.pbjs.version,true);S.run.disabled=false;
- let codes=[];try{codes=window.pbjs.getBidderCodes()}catch(e){}log('Prebid loaded',{version:window.pbjs.version,adUnitCodes:codes});}
- else if(window.PREBID_LOAD_FAILED||polling>=100){clearInterval(timer);status('Prebid.js unavailable. Check prebid.js filename, JS syntax and GitHub Pages deployment.',false);log('Prebid loading failed',{script:'./prebid.js?v=3',loadEventFailed:!!window.PREBID_LOAD_FAILED})}
-},100);
-S.run.addEventListener('click',()=>{
- if(!ready()){status('Prebid is not ready',false);return}
- S.run.disabled=true;S.out.textContent='';S.summary.textContent='Auction running…';status('Auction running…');
- const begin=performance.now();const observed={};
- window.pbjs.que.push(()=>{
-  try{
-   window.pbjs.setConfig({debug:true,bidderTimeout:2500,priceGranularity:'medium'});
-   const adUnit={code:'test-rectangle',mediaTypes:{banner:{sizes:[[300,250]]}},bids:[
-    {bidder:'openweb',params:{org:'259',placementId:'netpeak.net_hb_display'}},
-    {bidder:'adyoulike',params:{placement:'d4dc545444ae302ef984244484d8ba9b'}}
-   ]};
-   log('Starting live auction',{page:location.href,adUnit});
-   window.pbjs.requestBids({adUnits:[adUnit],timeout:2500,bidsBackHandler:(bidResponses,timedOut,auctionId)=>{
-     try{
-       const result=bidResponses||{};
-       const received=(result['test-rectangle']&&result['test-rectangle'].bids)||[];
-       const nobids=typeof window.pbjs.getNoBidsForAdUnitCode==='function'?window.pbjs.getNoBidsForAdUnitCode('test-rectangle'):[];
-       const elapsed=Math.round(performance.now()-begin);
-       log('Auction callback',{elapsedMs:elapsed,auctionId,timedOut,bidResponses:result,noBids:nobids,events:observed});
-       const noList=Array.isArray(nobids)?nobids:(nobids&&nobids.bids)||[];
-       bidders.forEach(b=>{
-         const found=received.filter(r=>(r.bidder||r.bidderCode)===b);
-         if(found.length){found.forEach(r=>row([b,'BID',Number(r.cpm).toFixed(4),r.currency||'USD',r.timeToRespond]))}
-         else{const declaredNoBid=noList.some(x=>(x.bidder||x.bidderCode)===b);row([b,declaredNoBid?'NO BID':'NO BID / TIMEOUT','—','—','—'])}
-       });
-       S.summary.textContent='Auction completed in '+elapsed+' ms. Received '+received.length+' bid(s).';
-       status(received.length?'Auction complete — '+received.length+' bid(s)':'Auction complete — no bids',received.length>0);
-     }catch(e){status('Result processing error: '+e.message,false);log('Result processing error',String(e))}
-     finally{S.run.disabled=false}
-   }});
-  }catch(e){status('Auction error: '+e.message,false);log('Auction error',{message:e.message,stack:e.stack});S.run.disabled=false}
- });
-});
-log('Page initialized. Waiting for Prebid.js');
+const DIV='div-gpt-ad-1793043226235-0';
+const PATH='/23114056084/np_oink/desktop-blog-right1';
+const URL='https://oink.bg/';
+const TIMEOUT=2500;
+const names=['openweb','adyoulike'];
+const status=document.getElementById('status');
+const result=document.getElementById('result');
+const bidrows=document.getElementById('bidrows');
+const targetEl=document.getElementById('targeting');
+const renderEl=document.getElementById('render');
+const logEl=document.getElementById('log');
+const button=document.getElementById('run');
+let gptReady=false,pbReady=false,slot=null,started=false,displayed=false,requested=false,finished=false;
+const history=[];
+function log(message,details){let entry=new Date().toISOString()+'  '+message;if(details!==undefined){try{entry+='\n'+JSON.stringify(details,null,2);}catch(error){entry+='\n[details not serializable]';}}history.push(entry);logEl.textContent=history.join('\n\n');}
+function update(){button.disabled=!(gptReady&&pbReady)||started;status.textContent='GPT '+(gptReady?'ready':'loading')+' · Prebid '+(pbReady?'ready':'loading')+(started?' · auction started':'');status.className=gptReady&&pbReady?'ok':'';}
+function addCell(tr,value){const td=document.createElement('td');td.textContent=value===undefined||value===null?'—':String(value);tr.appendChild(td);}
+function targeting(){if(!slot)return{};const obj={};slot.getTargetingKeys().forEach(key=>obj[key]=slot.getTargeting(key));return obj;}
+function drawBids(bids){bidrows.textContent='';names.forEach(name=>{const subset=bids.filter(b=>(b.bidderCode||b.bidder)===name);if(!subset.length){const tr=document.createElement('tr');[name,'NO BID','—','—'].forEach(v=>addCell(tr,v));bidrows.appendChild(tr);}else{subset.forEach(b=>{const tr=document.createElement('tr');[name,'BID',Number(b.cpm).toFixed(4)+' '+(b.currency||'USD'),(b.timeToRespond??'—')+' ms'].forEach(v=>addCell(tr,v));bidrows.appendChild(tr);});}});}
+function gamRequest(reason){if(requested)return;requested=true;googletag.cmd.push(function(){try{if(!displayed){googletag.display(DIV);displayed=true;}log('Calling GPT refresh',{reason:reason,slotPath:PATH,gptPageUrl:URL,targeting:targeting()});googletag.pubads().refresh([slot]);}catch(error){result.textContent='GAM request failed: '+error.message;log('GAM request exception',String(error));}});}
+function afterPrebid(reason){if(finished)return;finished=true;const responses=typeof pbjs.getBidResponsesForAdUnitCode==='function'?pbjs.getBidResponsesForAdUnitCode(DIV):{};const bids=responses&&Array.isArray(responses.bids)?responses.bids:[];drawBids(bids);log('Prebid completed',{reason:reason,bidCount:bids.length,bids:bids.map(b=>({bidder:b.bidderCode||b.bidder,cpm:b.cpm,currency:b.currency,timeToRespond:b.timeToRespond,adId:b.adId}))});googletag.cmd.push(function(){try{if(bids.length&&typeof pbjs.setTargetingForGPTAsync==='function'){pbjs.setTargetingForGPTAsync([DIV]);}const kv=targeting();targetEl.textContent=JSON.stringify(kv,null,2);result.textContent='Prebid: '+bids.length+' bid(s). GPT request '+(bids.length?'with eligible HB targeting':'without HB bid targeting')+'.';log('HB targeting sent to GPT',{targeting:kv});gamRequest(reason);}catch(error){log('Targeting failure, requesting GAM without HB',String(error));result.textContent='Targeting error: '+error.message;gamRequest('targeting-error');}});}
+button.addEventListener('click',function(){if(started||!pbReady||!gptReady)return;started=true;update();result.textContent='Prebid auction running…';log('Starting Prebid auction');const failSafe=window.setTimeout(function(){log('Failsafe reached; checking Prebid results and calling GAM');afterPrebid('failsafe');},TIMEOUT+750);pbjs.que.push(function(){try{pbjs.requestBids({adUnitCodes:[DIV],timeout:TIMEOUT,bidsBackHandler:function(bidResponses,timedOut){window.clearTimeout(failSafe);log('Prebid callback',{timedOut:timedOut});afterPrebid('auction-callback');}});}catch(error){window.clearTimeout(failSafe);log('Prebid exception',String(error));afterPrebid('exception');}});});
+googletag.cmd.push(function(){try{
+  googletag.setConfig({adsenseAttributes:{page_url:URL},disableInitialLoad:true});
+  slot=googletag.defineSlot(PATH,[[300,250]],DIV);
+  if(!slot)throw new Error('defineSlot returned null');
+  slot.addService(googletag.pubads());
+  googletag.pubads().enableSingleRequest();
+  googletag.pubads().addEventListener('slotRequested',function(event){if(event.slot===slot)log('GAM slotRequested');});
+  googletag.pubads().addEventListener('slotResponseReceived',function(event){if(event.slot===slot)log('GAM slotResponseReceived');});
+  googletag.pubads().addEventListener('slotRenderEnded',function(event){if(event.slot!==slot)return;const details={isEmpty:event.isEmpty,size:event.size||null,lineItemId:event.lineItemId||null,creativeId:event.creativeId||null};renderEl.textContent=JSON.stringify(details,null,2);log('GAM slotRenderEnded',details);if(event.isEmpty){result.textContent+=' GAM returned empty.';}else{result.textContent+=' GAM selected line item '+(event.lineItemId||'unknown')+'.';}});
+  googletag.pubads().addEventListener('slotOnload',function(event){if(event.slot===slot)log('GAM slotOnload');});
+  googletag.enableServices();gptReady=true;log('GPT configured',{path:PATH,div:DIV,page_url:URL,actualHost:location.hostname});update();
+}catch(error){log('GPT initialization error',String(error));status.textContent='GPT initialization failed: '+error.message;}});
+let checks=0;const wait=setInterval(function(){checks++;if(window.pbjs&&window.pbjs.libLoaded&&typeof pbjs.requestBids==='function'&&typeof pbjs.setTargetingForGPTAsync==='function'){
+  clearInterval(wait);pbjs.que.push(function(){
+    try{pbjs.setConfig({bidderTimeout:TIMEOUT,priceGranularity:{buckets:[{max:50,increment:0.05,precision:2}]},enableSendAllBids:false,debug:true});
+      pbjs.addAdUnits([{code:DIV,mediaTypes:{banner:{sizes:[[300,250]]}},bids:[{bidder:'openweb',params:{org:'259',placementId:'netpeak.net_hb_display'}},{bidder:'adyoulike',params:{placement:'d4dc545444ae302ef984244484d8ba9b'}}]}]);
+      pbReady=true;log('Prebid initialized',{version:pbjs.version,bidders:names,adUnitCode:DIV});update();
+    }catch(error){log('Prebid configuration failed',String(error));status.textContent='Prebid configuration error: '+error.message;}
+  });
+}else if(checks>=120){clearInterval(wait);log('Prebid did not initialize; check ./prebid.js and both adapters');status.textContent='Prebid not detected. Check prebid.js.';}},100);
+window.addEventListener('error',function(event){log('Browser exception',event.message)});
+window.addEventListener('unhandledrejection',function(event){log('Unhandled promise rejection',String(event.reason))});
+log('Ready; awaiting libraries. Actual site='+location.hostname);
 })();
 </script>
 </body>
