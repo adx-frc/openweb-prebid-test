@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenWeb Prebid Test</title>
+<style>
+body{font:16px/1.5 system-ui,sans-serif;max-width:900px;margin:32px auto;padding:0 16px;color:#17202a}
+.card{border:1px solid #d5dbe1;border-radius:12px;padding:16px;margin:16px 0}
+#slot{width:300px;height:250px;max-width:100%;border:2px dashed #aab4be;display:flex;align-items:center;justify-content:center;text-align:center;background:#f7f9fb}
+button{padding:10px 14px;border:0;border-radius:8px;background:#174ea6;color:white;font-weight:600}
+button:disabled{opacity:.6}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f6f8fa;padding:12px;border-radius:8px}
+table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px;border-bottom:1px solid #ddd;overflow-wrap:anywhere}
+.good{color:#137333}.bad{color:#b3261e}.muted{color:#59636e}
+</style>
+<script async src="./prebid.js"></script>
+</head>
+<body>
+<h1>OpenWeb + Prebid.js diagnostic test</h1>
+<p class="muted">This page checks whether OpenWeb returns a bid through Prebid. It does not connect to Google Ad Manager and does not render a paid ad.</p>
+<section class="card">
+<h2>Configuration</h2>
+<ul><li>Bidder: <code>openweb</code></li><li>org: <code>259</code></li><li>placementId: <code>netpeak.net_hb_display</code></li><li>Size: <code>300 × 250</code></li></ul>
+<p id="status">Waiting for Prebid.js…</p><button id="run" disabled>Run OpenWeb auction</button>
+</section>
+<section class="card"><h2>Test slot</h2><div id="slot">Diagnostic only<br>300 × 250</div><p class="muted">This is a visual placeholder, not an ad impression.</p></section>
+<section class="card"><h2>Results</h2><p id="summary">No auction has run yet.</p><table><thead><tr><th>Bidder</th><th>CPM</th><th>Currency</th><th>Size</th><th>Response time</th></tr></thead><tbody id="results"><tr><td colspan="5">No results yet.</td></tr></tbody></table></section>
+<section class="card"><h2>Diagnostic log</h2><pre id="log">Page initialized.</pre></section>
+<script>
+(function(){
+  "use strict";
+  var status=document.getElementById("status"), run=document.getElementById("run"),
+      summary=document.getElementById("summary"), results=document.getElementById("results"),
+      logEl=document.getElementById("log"), lines=[];
+  function log(msg,obj){var s=new Date().toISOString()+" "+msg;if(obj!==undefined){try{s+="\n"+JSON.stringify(obj,null,2)}catch(e){}}lines.push(s);logEl.textContent=lines.join("\n\n")}
+  function statusText(s,cls){status.textContent=s;status.className=cls||""}
+  function cell(row,value){var td=document.createElement("td");td.textContent=value==null||value===""?"—":String(value);row.appendChild(td)}
+  function wait(){var n=0,t=setInterval(function(){n++;if(window.pbjs&&Array.isArray(window.pbjs.que)){clearInterval(t);statusText("Prebid.js loaded. Ready.");run.disabled=false;log("Prebid detected",{version:window.pbjs.version||"not exposed",page:location.href})}else if(n>=100){clearInterval(t);statusText("Prebid.js not detected. Upload a custom prebid.js build containing openwebBidAdapter.","bad");log("Prebid not detected after 10 seconds. Check that prebid.js exists in the repository root and includes OpenWeb adapter.")}},100)}
+  run.addEventListener("click",function(){
+    if(!window.pbjs||!Array.isArray(window.pbjs.que)){statusText("Prebid.js unavailable.","bad");return}
+    run.disabled=true;summary.textContent="Auction running…";statusText("Auction running…");results.textContent="";
+    var started=Date.now();log("Starting auction");
+    window.pbjs.que.push(function(){
+      window.pbjs.setConfig({debug:true,bidderTimeout:2000,priceGranularity:"medium",
+        userSync:{filterSettings:{iframe:{bidders:["openweb"],filter:"include"}}}});
+      window.pbjs.addAdUnits([{code:"openweb-test-slot",mediaTypes:{banner:{sizes:[[300,250]]}},
+        bids:[{bidder:"openweb",params:{org:"259",placementId:"netpeak.net_hb_display"}}]}]);
+      window.pbjs.requestBids({adUnitCodes:["openweb-test-slot"],timeout:2000,bidsBackHandler:function(){
+        var elapsed=Date.now()-started, all=window.pbjs.getBidResponses(), bids=(all.openweb&&all.openweb.bids)||[];
+        log("Auction finished",{elapsedMs:elapsed,responses:all});
+        if(!bids.length){var r=document.createElement("tr"),c=document.createElement("td");c.colSpan=5;c.textContent="No OpenWeb bid returned. Check the log and Network tab.";r.appendChild(c);results.appendChild(r);summary.textContent="Finished in "+elapsed+" ms; no OpenWeb bid returned.";statusText("No bid returned","bad")}
+        else{bids.forEach(function(b){var r=document.createElement("tr");cell(r,b.bidder||"openweb");cell(r,typeof b.cpm==="number"?b.cpm.toFixed(4):b.cpm);cell(r,b.currency||"USD");cell(r,(b.width||"?")+" × "+(b.height||"?"));cell(r,b.timeToRespond);results.appendChild(r)});summary.textContent=bids.length+" bid(s) returned in "+elapsed+" ms.";statusText("Success: OpenWeb returned a bid","good")}
+        run.disabled=false;
+      }});
+    });
+  });
+  log("Diagnostic page initialized");wait();
+})();
+</script>
+</body>
+</html>
