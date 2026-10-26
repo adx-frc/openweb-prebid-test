@@ -8,53 +8,138 @@
 body{font:16px/1.5 system-ui,sans-serif;max-width:900px;margin:32px auto;padding:0 16px;color:#17202a}
 .card{border:1px solid #d5dbe1;border-radius:12px;padding:16px;margin:16px 0}
 #slot{width:300px;height:250px;max-width:100%;border:2px dashed #aab4be;display:flex;align-items:center;justify-content:center;text-align:center;background:#f7f9fb}
-button{padding:10px 14px;border:0;border-radius:8px;background:#174ea6;color:white;font-weight:600}
-button:disabled{opacity:.6}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f6f8fa;padding:12px;border-radius:8px}
+button{padding:10px 14px;border:0;border-radius:8px;background:#174ea6;color:white;font-weight:600;cursor:pointer}
+button:disabled{opacity:.6;cursor:not-allowed}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f6f8fa;padding:12px;border-radius:8px}
 table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px;border-bottom:1px solid #ddd;overflow-wrap:anywhere}
 .good{color:#137333}.bad{color:#b3261e}.muted{color:#59636e}
 </style>
-<script async src="./prebid.js"></script>
 </head>
 <body>
 <h1>OpenWeb + Prebid.js diagnostic test</h1>
-<p class="muted">This page checks whether OpenWeb returns a bid through Prebid. It does not connect to Google Ad Manager and does not render a paid ad.</p>
+<p class="muted">Test only. No GAM integration and no paid ad rendering.</p>
 <section class="card">
 <h2>Configuration</h2>
-<ul><li>Bidder: <code>openweb</code></li><li>org: <code>259</code></li><li>placementId: <code>netpeak.net_hb_display</code></li><li>Size: <code>300 × 250</code></li></ul>
-<p id="status">Waiting for Prebid.js…</p><button id="run" disabled>Run OpenWeb auction</button>
+<ul><li>Bidder: <code>openweb</code></li><li>org: <code>259</code></li><li>placementId: <code>netpeak.net_hb_display</code></li><li>Size: <code>300 × 250</code></li><li>Timeout: <code>2000 ms</code></li></ul>
+<p id="status">Loading Prebid.js…</p>
+<button id="run" disabled>Run OpenWeb auction</button>
 </section>
-<section class="card"><h2>Test slot</h2><div id="slot">Diagnostic only<br>300 × 250</div><p class="muted">This is a visual placeholder, not an ad impression.</p></section>
-<section class="card"><h2>Results</h2><p id="summary">No auction has run yet.</p><table><thead><tr><th>Bidder</th><th>CPM</th><th>Currency</th><th>Size</th><th>Response time</th></tr></thead><tbody id="results"><tr><td colspan="5">No results yet.</td></tr></tbody></table></section>
-<section class="card"><h2>Diagnostic log</h2><pre id="log">Page initialized.</pre></section>
+<section class="card"><h2>Test slot</h2><div id="slot">Diagnostic only — 300 × 250</div></section>
+<section class="card"><h2>Results</h2><p id="summary">No auction yet.</p><table><thead><tr><th>Bidder</th><th>CPM</th><th>Currency</th><th>Size</th><th>Response time</th></tr></thead><tbody id="results"><tr><td colspan="5">No results yet.</td></tr></tbody></table></section>
+<section class="card"><h2>Diagnostic log</h2><pre id="log"></pre></section>
 <script>
-(function(){
-  "use strict";
-  var status=document.getElementById("status"), run=document.getElementById("run"),
-      summary=document.getElementById("summary"), results=document.getElementById("results"),
-      logEl=document.getElementById("log"), lines=[];
-  function log(msg,obj){var s=new Date().toISOString()+" "+msg;if(obj!==undefined){try{s+="\n"+JSON.stringify(obj,null,2)}catch(e){}}lines.push(s);logEl.textContent=lines.join("\n\n")}
-  function statusText(s,cls){status.textContent=s;status.className=cls||""}
-  function cell(row,value){var td=document.createElement("td");td.textContent=value==null||value===""?"—":String(value);row.appendChild(td)}
-  function wait(){var n=0,t=setInterval(function(){n++;if(window.pbjs&&Array.isArray(window.pbjs.que)){clearInterval(t);statusText("Prebid.js loaded. Ready.");run.disabled=false;log("Prebid detected",{version:window.pbjs.version||"not exposed",page:location.href})}else if(n>=100){clearInterval(t);statusText("Prebid.js not detected. Upload a custom prebid.js build containing openwebBidAdapter.","bad");log("Prebid not detected after 10 seconds. Check that prebid.js exists in the repository root and includes OpenWeb adapter.")}},100)}
-  run.addEventListener("click",function(){
-    if(!window.pbjs||!Array.isArray(window.pbjs.que)){statusText("Prebid.js unavailable.","bad");return}
-    run.disabled=true;summary.textContent="Auction running…";statusText("Auction running…");results.textContent="";
-    var started=Date.now();log("Starting auction");
-    window.pbjs.que.push(function(){
-      window.pbjs.setConfig({debug:true,bidderTimeout:2000,priceGranularity:"medium",
-        userSync:{filterSettings:{iframe:{bidders:["openweb"],filter:"include"}}}});
-      window.pbjs.addAdUnits([{code:"openweb-test-slot",mediaTypes:{banner:{sizes:[[300,250]]}},
-        bids:[{bidder:"openweb",params:{org:"259",placementId:"netpeak.net_hb_display"}}]}]);
-      window.pbjs.requestBids({adUnitCodes:["openweb-test-slot"],timeout:2000,bidsBackHandler:function(){
-        var elapsed=Date.now()-started, all=window.pbjs.getBidResponses(), bids=(all.openweb&&all.openweb.bids)||[];
-        log("Auction finished",{elapsedMs:elapsed,responses:all});
-        if(!bids.length){var r=document.createElement("tr"),c=document.createElement("td");c.colSpan=5;c.textContent="No OpenWeb bid returned. Check the log and Network tab.";r.appendChild(c);results.appendChild(r);summary.textContent="Finished in "+elapsed+" ms; no OpenWeb bid returned.";statusText("No bid returned","bad")}
-        else{bids.forEach(function(b){var r=document.createElement("tr");cell(r,b.bidder||"openweb");cell(r,typeof b.cpm==="number"?b.cpm.toFixed(4):b.cpm);cell(r,b.currency||"USD");cell(r,(b.width||"?")+" × "+(b.height||"?"));cell(r,b.timeToRespond);results.appendChild(r)});summary.textContent=bids.length+" bid(s) returned in "+elapsed+" ms.";statusText("Success: OpenWeb returned a bid","good")}
-        run.disabled=false;
-      }});
-    });
+(function () {
+  'use strict';
+  var button = document.getElementById('run');
+  var status = document.getElementById('status');
+  var summary = document.getElementById('summary');
+  var results = document.getElementById('results');
+  var logger = document.getElementById('log');
+  var lines = [];
+  function log(msg, value) {
+    var line = new Date().toISOString() + ' ' + msg;
+    if (value !== undefined) {
+      try { line += '\n' + JSON.stringify(value, null, 2); } catch (err) { line += ' (serialization failed)'; }
+    }
+    lines.push(line);
+    logger.textContent = lines.join('\n\n');
+  }
+  function updateStatus(msg, ok) {
+    status.textContent = msg;
+    status.className = ok === true ? 'good' : ok === false ? 'bad' : '';
+  }
+  function prebidReady() {
+    return !!(window.pbjs && typeof window.pbjs.requestBids === 'function' && typeof window.pbjs.addAdUnits === 'function');
+  }
+  function checkReady() {
+    if (prebidReady()) {
+      button.disabled = false;
+      updateStatus('Prebid.js ready — ' + (window.pbjs.version || 'version unknown'), true);
+      log('Prebid API available', {version: window.pbjs.version || 'unknown', libLoaded: window.pbjs.libLoaded, queueType: typeof window.pbjs.que});
+      return true;
+    }
+    return false;
+  }
+  var script = document.createElement('script');
+  script.src = './prebid.js?v=2';
+  script.async = true;
+  script.onload = function () {
+    log('prebid.js file downloaded and executed (load event)');
+    if (!checkReady()) {
+      log('Prebid global API missing after load', {hasPbjs: !!window.pbjs, typeOfQueue: typeof (window.pbjs && window.pbjs.que)});
+      updateStatus('Script loaded, but Prebid API not initialized. Check browser Console.', false);
+    }
+  };
+  script.onerror = function () {
+    log('Failed to download or execute prebid.js. Check the repository file and Network tab.');
+    updateStatus('Prebid script failed to load.', false);
+  };
+  window.addEventListener('error', function(e) {
+    log('Browser error', {message:e.message, filename:e.filename, line:e.lineno});
   });
-  log("Diagnostic page initialized");wait();
+  document.head.appendChild(script);
+  var attempts = 0;
+  var timer = window.setInterval(function() {
+    attempts++;
+    if (checkReady() || attempts >= 150) {
+      window.clearInterval(timer);
+      if (!prebidReady()) log('Prebid not ready after 15 seconds.');
+    }
+  },100);
+  function addCell(row,text) { var td=document.createElement('td'); td.textContent=String(text == null ? '—' : text); row.appendChild(td); }
+  button.addEventListener('click', function() {
+    if (!prebidReady()) { updateStatus('Prebid is not ready.', false); return; }
+    button.disabled = true;
+    updateStatus('Auction in progress…');
+    summary.textContent = 'Waiting for OpenWeb response…';
+    results.textContent = '';
+    var started = Date.now();
+    var adUnit = {
+      code:'openweb-test-slot',
+      mediaTypes:{banner:{sizes:[[300,250]]}},
+      bids:[{bidder:'openweb', params:{org:'259',placementId:'netpeak.net_hb_display'}}]
+    };
+    try {
+      window.pbjs.setConfig({debug:true,bidderTimeout:2000,priceGranularity:'medium'});
+      window.pbjs.requestBids({
+        adUnits:[adUnit],
+        timeout:2000,
+        bidsBackHandler:function(response, timedOut) {
+          var elapsed = Date.now()-started;
+          var slot = (response && response['openweb-test-slot']) || {};
+          var bids = Array.isArray(slot.bids) ? slot.bids : [];
+          var noBids = typeof window.pbjs.getNoBids === 'function' ? window.pbjs.getNoBids() : {};
+          log('Auction complete', {elapsedMs:elapsed, bids:bids, noBids:noBids, timedOut:timedOut});
+          results.textContent = '';
+          if (!bids.length) {
+            var row=document.createElement('tr');
+            var td=document.createElement('td');td.colSpan=5;td.textContent='No OpenWeb bid returned.';row.appendChild(td);results.appendChild(row);
+            updateStatus('Auction finished — no bid.', false);
+            summary.textContent='Completed in '+elapsed+' ms, without a bid. Check Network tab and diagnostic log.';
+          } else {
+            bids.forEach(function(b) {
+              var row=document.createElement('tr');
+              addCell(row,b.bidder||b.bidderCode||'openweb');
+              addCell(row,typeof b.cpm === 'number' ? b.cpm.toFixed(4) : b.cpm);
+              addCell(row,b.currency||'USD');
+              addCell(row,(b.width||'?')+' × '+(b.height||'?'));
+              addCell(row,b.timeToRespond);
+              results.appendChild(row);
+            });
+            updateStatus('Bid returned from OpenWeb.', true);
+            summary.textContent=bids.length+' bid(s) returned in '+elapsed+' ms.';
+          }
+          button.disabled=false;
+        }
+      });
+      log('Auction requested', adUnit);
+    } catch(error) {
+      updateStatus('Auction error: '+error.message,false);
+      log('Auction exception',String(error && error.stack || error));
+      button.disabled=false;
+    }
+  });
+  log('Diagnostic page opened', {url:window.location.href});
 })();
 </script>
 </body>
